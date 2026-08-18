@@ -1,0 +1,29 @@
+node_modules/
+dist/
+
+# Secrets — also deny-listed in .claude/settings.json so Claude cannot read them
+.env
+.env.*
+!.env.example
+credentials/
+
+# Runtime state and artifacts
+data/seen.json
+data/document.json
+data/reviews.jsonl
+screenshots/
+logs/
+.chrome-profile/
+
+# Local-only Claude overrides
+.claude/settings.local.json
+
+.DS_Store
+
+config/targets.json
+
+# Generated monthly reports
+reports/
+
+# worktrees
+.worktrees/

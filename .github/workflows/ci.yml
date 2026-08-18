@@ -1,0 +1,24 @@
+# Exactly two checks, both offline: typecheck and the fixture-backed test
+# suite. Needs no secrets — tests never hit the network (repo rule 1).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      # Tests run over fixtures; no browser is ever launched in CI.
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test

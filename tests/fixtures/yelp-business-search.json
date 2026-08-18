@@ -1,0 +1,23 @@
+{
+  "businesses": [
+    {
+      "id": "REDACTED_yelp_business_id_1",
+      "alias": "dr-dooom-lab-canary-2",
+      "name": "Dr. DOOOM Lab",
+      "url": "https://www.yelp.com/biz/dr-dooom-lab-canary-2?adjust_creative=REDACTED&utm_campaign=yelp_api_v3&utm_medium=api_v3_business_search&utm_source=REDACTED",
+      "is_closed": false,
+      "review_count": 128,
+      "rating": 4.5
+    },
+    {
+      "id": "REDACTED_yelp_business_id_2",
+      "alias": "dooom-lab-tea-room-canary",
+      "name": "T House Tea Room",
+      "url": "https://www.yelp.com/biz/dooom-lab-tea-room-canary?adjust_creative=REDACTED&utm_campaign=yelp_api_v3&utm_medium=api_v3_business_search&utm_source=REDACTED",
+      "is_closed": false,
+      "review_count": 41,
+      "rating": 4.0
+    }
+  ],
+  "total": 2
+}

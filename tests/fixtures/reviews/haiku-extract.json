@@ -1,0 +1,14 @@
+{
+  "dr-dooom-lab:google:g-aug-01": "{\"claims\":[{\"sentiment\":\"pro\",\"text\":\"Portions are very large\"}]}",
+  "dr-dooom-lab:google:g-aug-02": "```json\n{\"claims\":[{\"sentiment\":\"pro\",\"text\":\"Karaage is crispy and juicy\"},{\"sentiment\":\"pro\",\"text\":\"Generous portions for the price\"}]}\n```",
+  "dr-dooom-lab:yelp:reviewer-c:2026-08-07": "{\"claims\":[{\"sentiment\":\"pro\",\"text\":\"Katsu curry is excellent\"},{\"sentiment\":\"pro\",\"text\":\"Portions are very generous\"}]}",
+  "dr-dooom-lab:google:g-aug-03": "{\"claims\":[{\"sentiment\":\"pro\",\"text\":\"Staff are friendly\"},{\"sentiment\":\"pro\",\"text\":\"Quick service at weekday lunch\"}]}",
+  "dr-dooom-lab:yelp:reviewer-e:2026-08-10": "{\"claims\":[{\"sentiment\":\"pro\",\"text\":\"Food was great\"},{\"sentiment\":\"con\",\"text\":\"40-minute wait for a table on Saturday night\"}]}",
+  "dr-dooom-lab:google:g-aug-04": "{\"claims\":[{\"sentiment\":\"pro\",\"text\":\"Cozy atmosphere\"},{\"sentiment\":\"pro\",\"text\":\"Miso soup is excellent\"}]}",
+  "dr-dooom-lab:yelp:reviewer-g:2026-08-15": "{\"claims\":[{\"sentiment\":\"con\",\"text\":\"Slow service on a Sunday evening\"},{\"sentiment\":\"pro\",\"text\":\"Food made up for the slow service\"}]}",
+  "dr-dooom-lab:google:g-aug-05": "{\"claims\":[{\"sentiment\":\"pro\",\"text\":\"Everything tasted fresh\"},{\"sentiment\":\"pro\",\"text\":\"Portions are big\"}]}",
+  "blue-karaage-bar:google:g-aug-10": "{\"claims\":[{\"sentiment\":\"pro\",\"text\":\"Fun izakaya atmosphere\"},{\"sentiment\":\"pro\",\"text\":\"Spicy karaage is worth reordering\"}]}",
+  "blue-karaage-bar:yelp:reviewer-t:2026-08-08": "{\"claims\":[{\"sentiment\":\"pro\",\"text\":\"Great drinks list\"},{\"sentiment\":\"pro\",\"text\":\"Chicken is crispy\"}]}",
+  "blue-karaage-bar:google:g-aug-11": "{\"claims\":[{\"sentiment\":\"pro\",\"text\":\"Spicy karaage is fantastic\"},{\"sentiment\":\"con\",\"text\":\"Room is loud\"}]}",
+  "blue-karaage-bar:yelp:reviewer-v:2026-08-14": "{\"claims\":[{\"sentiment\":\"pro\",\"text\":\"Chicken was good\"},{\"sentiment\":\"con\",\"text\":\"Order took nearly an hour\"}]}"
+}

@@ -1,0 +1,55 @@
+<!doctype html>
+<!--
+  Minimal stand-in for the Google Maps review panel. Reviewer names, text and
+  ids are invented (rule 4) — what is copied from the real page is the SHAPE:
+
+    div[data-review-id]            <- outer card
+      └ div[data-review-id]        <- SAME id, nested, holds the same content
+
+  That nesting is the whole point of this fixture. A bare
+  `div[data-review-id]` match returns two nodes per review, which is what
+  inflated the visible-review count and halved the effective slice() ceiling.
+
+  The last entry has no star element and must be dropped by the rating filter.
+-->
+<html>
+  <body>
+    <div class="m6QErb">
+      <div data-review-id="REVIEW_AAA" class="jftiEf">
+        <div data-review-id="REVIEW_AAA" class="jJc9Ad">
+          <div class="d4r55">Reviewer One</div>
+          <span role="img" aria-label="5 stars"></span>
+          <span class="rsqaWe">2 weeks ago</span>
+          <span class="wiI7pd">Great tteokbokki, came back twice in one week.</span>
+          <a href="https://www.google.com/maps/reviews/data=!AAA">link</a>
+        </div>
+      </div>
+
+      <div data-review-id="REVIEW_BBB" class="jftiEf">
+        <div data-review-id="REVIEW_BBB" class="jJc9Ad">
+          <div class="d4r55">Reviewer Two</div>
+          <span role="img" aria-label="4 stars"></span>
+          <span class="rsqaWe">a month ago</span>
+          <span class="wiI7pd">Solid banchan, service was a little slow.</span>
+          <a href="https://www.google.com/maps/reviews/data=!BBB">link</a>
+        </div>
+      </div>
+
+      <div data-review-id="REVIEW_CCC" class="jftiEf">
+        <div data-review-id="REVIEW_CCC" class="jJc9Ad">
+          <div class="d4r55">Reviewer Three</div>
+          <span role="img" aria-label="1 star"></span>
+          <span class="rsqaWe">3 months ago</span>
+          <span class="wiI7pd">Waited 40 minutes for a table on a Tuesday.</span>
+          <a href="https://www.google.com/maps/reviews/data=!CCC">link</a>
+        </div>
+      </div>
+
+      <!-- Not a review: no rating element, must be filtered out. -->
+      <div data-review-id="REVIEW_DDD" class="jftiEf">
+        <div class="d4r55">Owner response</div>
+        <span class="wiI7pd">Thanks for visiting!</span>
+      </div>
+    </div>
+  </body>
+</html>

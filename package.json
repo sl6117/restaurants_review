@@ -1,0 +1,31 @@
+{
+  "name": "restaurants-review",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Daily Google Maps + Yelp review monitor that appends new reviews to a Google Sheet",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "check": "node --env-file-if-exists=.env --import tsx src/run.ts",
+    "report": "node --env-file-if-exists=.env --import tsx src/report/run.ts",
+    "resolve-place-id": "node --env-file-if-exists=.env --import tsx scripts/resolvePlaceId.ts",
+    "add-restaurant": "node --env-file-if-exists=.env --import tsx src/resolve/addRestaurant.ts",
+    "test": "node --import tsx --test --test-reporter=spec tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "diagnose": "node --env-file-if-exists=.env --import tsx scripts/diagnose.ts",
+    "authorize": "node --env-file-if-exists=.env --import tsx scripts/authorize.ts"
+  },
+  "dependencies": {
+    "google-auth-library": "^9.15.0",
+    "playwright": "^1.49.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "prettier": "^3.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

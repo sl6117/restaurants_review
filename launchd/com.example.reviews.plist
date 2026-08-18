@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Daily review check. Replace every /Users/YOU path with your own, then copy to
+  ~/Library/LaunchAgents/ and load with:
+    launchctl load ~/Library/LaunchAgents/com.example.reviews.plist
+
+  RunAtLoad plus StartCalendarInterval means a run missed because the Mac was
+  asleep fires on the next wake rather than being skipped for the day.
+
+  TWO THINGS THAT ALREADY BROKE THIS — do not "simplify" them away:
+
+  1. Node is an ABSOLUTE nvm path, not `npm` or bare `node`. launchd runs a
+     login shell that never initializes nvm, so PATH resolves to an older
+     system Node — which does not understand --import or
+     --env-file-if-exists, and fails with "bad option".
+     If you upgrade Node via nvm, update this path AND re-load the job.
+
+  2. The project must NOT live under ~/Desktop, ~/Documents or ~/Downloads.
+     macOS protects those, and a launchd job does not inherit Terminal's
+     permission — it dies at getcwd with "Operation not permitted".
+     Move the project (e.g. to ~/restaurants_review) rather than granting
+     Full Disk Access to the Node binary, which would hand every script run
+     with that Node access to the entire disk.
+-->
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.example.reviews</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/Users/YOU/.nvm/versions/node/v22.0.0/bin/node</string>
+      <string>--env-file-if-exists=.env</string>
+      <string>--import</string>
+      <string>tsx</string>
+      <string>src/run.ts</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/YOU/restaurants_review</string>
+
+    <!-- Playwright shells out to find Chrome; give it a usable PATH. -->
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string>/Users/YOU/.nvm/versions/node/v22.0.0/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+      <key>Hour</key>
+      <integer>9</integer>
+      <key>Minute</key>
+      <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/YOU/restaurants_review/logs/run.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/YOU/restaurants_review/logs/run.error.log</string>
+  </dict>
+</plist>
