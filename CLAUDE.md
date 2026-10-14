@@ -59,6 +59,8 @@ reports/                     generated {restaurant-slug}/YYYY-MM.md (gitignored)
 - `npm run check` — real run.
 - `npm run report` — pros/cons report from the archive for the current month; `npm run report -- --month=YYYY-MM` for a past month. Needs `ANTHROPIC_API_KEY`.
 - `npm run typecheck` — `tsc --noEmit`.
+- `npm run doctor` — read-only pre-flight (Node, Chrome, targets, OAuth files,
+  API keys, launchd paths). Exits 1 on any FAIL; never prints secret values.
 - `npm run add-restaurant -- "name city"` — resolve a restaurant via Google
   Places Text Search + Yelp Fusion and append it to `config/targets.json`.
   Needs `ANTHROPIC_API_KEY`, plus `GOOGLE_MAPS_API_KEY` and/or `YELP_API_KEY`.
