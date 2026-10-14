@@ -88,15 +88,26 @@ function displayPath(path: string, projectRoot: string): string {
   return rel && !rel.startsWith("..") ? rel : path;
 }
 
+/**
+ * An overridden path is named by its env var, not printed: the value is
+ * user-supplied and reaches the terminal unredacted otherwise.
+ */
 export function checkOAuthFiles(
   projectRoot: string,
+  env: Env,
   clientPath: string,
   tokenPath: string,
   exists: Exists,
 ): CheckResult {
-  const missing = [clientPath, tokenPath]
-    .filter((path) => !exists(path))
-    .map((path) => displayPath(path, projectRoot));
+  const files = [
+    [clientPath, "GOOGLE_OAUTH_CLIENT"],
+    [tokenPath, "GOOGLE_OAUTH_TOKEN"],
+  ] as const;
+  const missing = files
+    .filter(([path]) => !exists(path))
+    .map(([path, key]) =>
+      env[key] ? `the file ${key} points to` : displayPath(path, projectRoot),
+    );
   if (missing.length === 0) {
     return { name: "OAuth files", status: "pass", detail: "client and token present" };
   }
@@ -282,6 +293,7 @@ export function runChecks(input: DoctorInput): CheckResult[] {
     checkTargets(input.targets),
     checkOAuthFiles(
       input.projectRoot,
+      input.env,
       input.oauthClientPath,
       input.oauthTokenPath,
       input.exists,

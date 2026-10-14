@@ -71,6 +71,7 @@ describe("single-input checks", () => {
   test("OAuth fails naming only the missing file, and points at authorize", () => {
     const result = checkOAuthFiles(
       ROOT,
+      {},
       `${ROOT}/credentials/oauth-client.json`,
       `${ROOT}/credentials/token.json`,
       existing(`${ROOT}/credentials/oauth-client.json`),
@@ -79,6 +80,22 @@ describe("single-input checks", () => {
     assert.match(result.detail, /missing credentials\/token\.json;/);
     assert.doesNotMatch(result.detail, /oauth-client/);
     assert.match(result.detail, /npm run authorize/);
+  });
+});
+
+describe("OAuth path overrides", () => {
+  test("OAuth names an overridden path by its env var instead of printing it", () => {
+    const secretish = "/secrets/sk-should-not-print/token.json";
+    const result = checkOAuthFiles(
+      ROOT,
+      { GOOGLE_OAUTH_TOKEN: secretish },
+      `${ROOT}/credentials/oauth-client.json`,
+      secretish,
+      existing(`${ROOT}/credentials/oauth-client.json`),
+    );
+    assert.equal(result.status, "fail");
+    assert.match(result.detail, /the file GOOGLE_OAUTH_TOKEN points to/);
+    assert.ok(!result.detail.includes("sk-should-not-print"));
   });
 });
 
