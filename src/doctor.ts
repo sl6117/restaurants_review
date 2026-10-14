@@ -234,6 +234,8 @@ function plistStrings(xml: string, key: string): string[] {
  * Compares the installed plist with this checkout. Reads the file only; whether
  * the job is loaded is launchctl's business, and this never calls it.
  */
+const NODE_VALUE_FLAGS = new Set(["--import", "--conditions", "-C", "--require", "-r"]);
+
 export function checkLaunchdPlist(
   platform: NodeJS.Platform,
   homeDir: string,
@@ -277,9 +279,9 @@ export function checkLaunchdPlist(
       );
     }
   }
-  // Node runs the first argument that is neither a flag nor --import's value.
+  // Node runs the first argument that is neither a flag nor a flag's value.
   const script = args.find(
-    (arg, i) => !arg.startsWith("-") && args[i - 1] !== "--import",
+    (arg, i) => !arg.startsWith("-") && !NODE_VALUE_FLAGS.has(args[i - 1] ?? ""),
   );
   if (script !== "src/run.ts") {
     problems.push(`ProgramArguments run ${script ?? "no script"}, not src/run.ts`);
