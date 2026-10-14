@@ -7,6 +7,8 @@
  * from a scraper that broke and is returning nothing.
  */
 
+import type { HttpFetch } from "../resolve/types.ts";
+
 export interface PlacesHealth {
   reachable: boolean;
   totalRatingCount: number | null;
@@ -16,10 +18,11 @@ export interface PlacesHealth {
 export async function checkPlacesHealth(
   apiKey: string,
   placeId: string,
+  fetchFn: HttpFetch = fetch,
 ): Promise<PlacesHealth> {
   const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`;
   try {
-    const response = await fetch(url, {
+    const response = await fetchFn(url, {
       headers: {
         "X-Goog-Api-Key": apiKey,
         "X-Goog-FieldMask": "id,displayName,rating,userRatingCount",
