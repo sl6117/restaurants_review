@@ -82,7 +82,8 @@ must be published, and how to schedule the daily run with launchd
 | `npm run check -- --dry-run` | Live fetch, prints rows, writes nothing |
 | `npm run check` | Real run: fetch, dedupe, screenshot, append |
 | `npm run resolve-place-id -- "Name, City"` | Fill in the optional Places ID for the health check |
-| `npm run diagnose` | Environment and credentials sanity check |
+| `npm run diagnose -- google\|yelp` | Live capture (HTML, screenshot, DOM probe) of one source for `/fix-scrape` |
+| `npm run doctor` | Read-only pre-flight: Node, Chrome, targets, OAuth files, API keys, launchd paths. Exits 1 on any FAIL |
 
 ## Repository rules
 

@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "diagnose": "node --env-file-if-exists=.env --import tsx scripts/diagnose.ts",
-    "authorize": "node --env-file-if-exists=.env --import tsx scripts/authorize.ts"
+    "authorize": "node --env-file-if-exists=.env --import tsx scripts/authorize.ts",
+    "doctor": "node --env-file-if-exists=.env --import tsx scripts/doctor.ts"
   },
   "dependencies": {
     "google-auth-library": "^9.15.0",
