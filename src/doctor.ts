@@ -36,10 +36,9 @@ export interface DoctorInput {
 }
 
 export const MIN_NODE_MAJOR = 22;
-export const PLIST_LABEL = "com.example.reviews";
 
 export function launchAgentPath(homeDir: string): string {
-  return join(homeDir, "Library", "LaunchAgents", `${PLIST_LABEL}.plist`);
+  return join(homeDir, "Library", "LaunchAgents", "com.example.reviews.plist");
 }
 
 export function checkNodeVersion(version: string): CheckResult {
@@ -54,43 +53,23 @@ export function checkNodeVersion(version: string): CheckResult {
 }
 
 /** Where Playwright's `channel: "chrome"` (src/browser.ts) looks for Chrome. */
-export function chromeCandidates(platform: NodeJS.Platform, env: Env): string[] {
-  switch (platform) {
-    case "darwin":
-      return ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"];
-    case "linux":
-      return ["/opt/google/chrome/chrome"];
-    case "win32":
-      return [env.LOCALAPPDATA, env.PROGRAMFILES, env["PROGRAMFILES(X86)"]]
-        .filter((dir): dir is string => Boolean(dir))
-        .map((dir) => `${dir}\\Google\\Chrome\\Application\\chrome.exe`);
-    default:
-      return [];
-  }
-}
+const CHROME_PATHS: Partial<Record<NodeJS.Platform, string>> = {
+  darwin: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  linux: "/opt/google/chrome/chrome",
+};
 
-export function checkChrome(
-  platform: NodeJS.Platform,
-  env: Env,
-  exists: Exists,
-): CheckResult {
-  const candidates = chromeCandidates(platform, env);
-  const found = candidates.find(exists);
-  if (found) return { name: "Google Chrome", status: "pass", detail: found };
+export function checkChrome(platform: NodeJS.Platform, exists: Exists): CheckResult {
+  const path = CHROME_PATHS[platform];
+  if (path && exists(path)) {
+    return { name: "Google Chrome", status: "pass", detail: path };
+  }
   return {
     name: "Google Chrome",
     status: "fail",
-    detail:
-      candidates.length > 0
-        ? `not found at ${candidates.join(" or ")}; npm run check and diagnose need real Chrome`
-        : `no known Chrome location on ${platform}`,
+    detail: path
+      ? `not found at ${path}; npm run check and diagnose need real Chrome`
+      : `no known Chrome location on ${platform}`,
   };
-}
-
-/** Project-relative when inside the checkout, so output stays readable. */
-function displayPath(path: string, projectRoot: string): string {
-  const rel = relative(projectRoot, path);
-  return rel && !rel.startsWith("..") ? rel : path;
 }
 
 export function checkTargets(targets: TargetsResult): CheckResult {
@@ -103,15 +82,32 @@ export function checkTargets(targets: TargetsResult): CheckResult {
     : { name: "config/targets.json", status: "fail", detail: targets.error };
 }
 
+/** Project-relative when inside the checkout, so output stays readable. */
+function displayPath(path: string, projectRoot: string): string {
+  const rel = relative(projectRoot, path);
+  return rel && !rel.startsWith("..") ? rel : path;
+}
+
+/**
+ * An overridden path is named by its env var, not printed: the value is
+ * user-supplied and reaches the terminal unredacted otherwise.
+ */
 export function checkOAuthFiles(
   projectRoot: string,
+  env: Env,
   clientPath: string,
   tokenPath: string,
   exists: Exists,
 ): CheckResult {
-  const missing = [clientPath, tokenPath]
-    .filter((path) => !exists(path))
-    .map((path) => displayPath(path, projectRoot));
+  const files = [
+    [clientPath, "GOOGLE_OAUTH_CLIENT"],
+    [tokenPath, "GOOGLE_OAUTH_TOKEN"],
+  ] as const;
+  const missing = files
+    .filter(([path]) => !exists(path))
+    .map(([path, key]) =>
+      env[key] ? `the file ${key} points to` : displayPath(path, projectRoot),
+    );
   if (missing.length === 0) {
     return { name: "OAuth files", status: "pass", detail: "client and token present" };
   }
@@ -125,22 +121,34 @@ export function checkOAuthFiles(
 }
 
 /**
- * The Doc id lives only in data/document.json. A ledger without it means the
- * next real run creates a second Doc and splits the review history.
+ * The doc id and the dedupe ledger must travel together. A doc without its
+ * ledger gets every visible review appended again (loadLedger treats a missing
+ * file as empty); a ledger without its doc id makes the next run start a
+ * second doc and split the history.
  */
 export function checkDocState(
   projectRoot: string,
   env: Env,
   exists: Exists,
 ): CheckResult {
-  const name = "Review doc id";
-  if (env.GOOGLE_DOC_ID) {
-    return { name, status: "pass", detail: "GOOGLE_DOC_ID override is set" };
+  const name = "Review doc + ledger";
+  const docRef = env.GOOGLE_DOC_ID
+    ? "GOOGLE_DOC_ID"
+    : exists(join(projectRoot, "data/document.json"))
+      ? "data/document.json"
+      : null;
+  const hasLedger = exists(join(projectRoot, "data/seen.json"));
+
+  if (docRef && !hasLedger) {
+    return {
+      name,
+      status: "fail",
+      detail:
+        `${docRef} points at an existing doc but data/seen.json is missing; the next ` +
+        `real run would re-append every visible review. Restore data/seen.json first`,
+    };
   }
-  if (exists(join(projectRoot, "data/document.json"))) {
-    return { name, status: "pass", detail: "data/document.json present" };
-  }
-  if (exists(join(projectRoot, "data/seen.json"))) {
+  if (!docRef && hasLedger) {
     return {
       name,
       status: "warn",
@@ -152,51 +160,39 @@ export function checkDocState(
   return {
     name,
     status: "pass",
-    detail: "first real run will create the doc and save its id",
+    detail: docRef
+      ? `${docRef} and data/seen.json present`
+      : "first real run will create the doc and save its id",
   };
 }
 
+/** Each inner list is "any one of these keys". */
+const KEY_CHECKS: { name: string; needs: string[][]; hint?: string }[] = [
+  {
+    name: "check: health-check key",
+    needs: [["GOOGLE_MAPS_API_KEY"]],
+    hint: "an empty Google scrape cannot be told apart from a broken one",
+  },
+  { name: "report", needs: [["ANTHROPIC_API_KEY"]] },
+  {
+    name: "add-restaurant",
+    needs: [["ANTHROPIC_API_KEY"], ["GOOGLE_MAPS_API_KEY", "YELP_API_KEY"]],
+  },
+];
+
 export function checkApiKeys(env: Env): CheckResult[] {
-  const set = (key: string) => Boolean(env[key]);
-  const results: CheckResult[] = [];
-
-  results.push(
-    set("GOOGLE_MAPS_API_KEY")
-      ? {
-          name: "check: health-check key",
-          status: "pass",
-          detail: "GOOGLE_MAPS_API_KEY set",
-        }
+  return KEY_CHECKS.map(({ name, needs, hint }): CheckResult => {
+    const missing = needs
+      .filter((anyOf) => !anyOf.some((key) => env[key]))
+      .map((anyOf) => anyOf.join(" or "));
+    return missing.length === 0
+      ? { name, status: "pass", detail: "required keys set" }
       : {
-          name: "check: health-check key",
+          name,
           status: "warn",
-          detail:
-            "GOOGLE_MAPS_API_KEY not set; an empty Google scrape cannot be told apart from a broken one",
-        },
-  );
-
-  results.push(
-    set("ANTHROPIC_API_KEY")
-      ? { name: "report", status: "pass", detail: "ANTHROPIC_API_KEY set" }
-      : { name: "report", status: "warn", detail: "needs ANTHROPIC_API_KEY" },
-  );
-
-  const missing: string[] = [];
-  if (!set("ANTHROPIC_API_KEY")) missing.push("ANTHROPIC_API_KEY");
-  if (!set("GOOGLE_MAPS_API_KEY") && !set("YELP_API_KEY")) {
-    missing.push("GOOGLE_MAPS_API_KEY and/or YELP_API_KEY");
-  }
-  results.push(
-    missing.length === 0
-      ? { name: "add-restaurant", status: "pass", detail: "required keys set" }
-      : {
-          name: "add-restaurant",
-          status: "warn",
-          detail: `needs ${missing.join(" plus ")}`,
-        },
-  );
-
-  return results;
+          detail: `needs ${missing.join(" and ")}${hint ? `; ${hint}` : ""}`,
+        };
+  });
 }
 
 const PROTECTED_FOLDERS = ["Desktop", "Documents", "Downloads"];
@@ -222,22 +218,24 @@ export function checkProjectLocation(
   return { name, status: "pass", detail: projectRoot };
 }
 
-function plistString(xml: string, key: string): string | null {
-  const match = xml.match(new RegExp(`<key>${key}</key>\\s*<string>([^<]*)</string>`));
-  return match?.[1]?.trim() ?? null;
-}
-
-function plistFirstArgument(xml: string): string | null {
-  const match = xml.match(
-    /<key>ProgramArguments<\/key>\s*<array>\s*<string>([^<]*)<\/string>/,
+/** The <string> values under a plist key, whether a single string or an array. */
+function plistStrings(xml: string, key: string): string[] {
+  const value = xml.match(
+    new RegExp(
+      `<key>${key}</key>\\s*(<string>[^<]*</string>|<array>[\\s\\S]*?</array>)`,
+    ),
+  )?.[1];
+  return [...(value ?? "").matchAll(/<string>([^<]*)<\/string>/g)].map((m) =>
+    (m[1] ?? "").trim(),
   );
-  return match?.[1]?.trim() ?? null;
 }
 
 /**
  * Compares the installed plist with this checkout. Reads the file only; whether
  * the job is loaded is launchctl's business, and this never calls it.
  */
+const NODE_VALUE_FLAGS = new Set(["--import", "--conditions", "-C", "--require", "-r"]);
+
 export function checkLaunchdPlist(
   platform: NodeJS.Platform,
   homeDir: string,
@@ -260,34 +258,48 @@ export function checkLaunchdPlist(
   const xml = plistXml.replace(/<!--[\s\S]*?-->/g, "");
   const problems: string[] = [];
 
-  const workingDirectory = plistString(xml, "WorkingDirectory");
-  if (!workingDirectory) {
-    problems.push("no WorkingDirectory");
-  } else if (workingDirectory !== projectRoot) {
+  const [workingDirectory] = plistStrings(xml, "WorkingDirectory");
+  if (workingDirectory !== projectRoot) {
     problems.push(
-      `WorkingDirectory is ${workingDirectory}, this checkout is ${projectRoot}`,
+      `WorkingDirectory is ${workingDirectory ?? "unset"}, this checkout is ${projectRoot}`,
     );
   }
 
-  const node = plistFirstArgument(xml);
-  if (!node) {
-    problems.push("no ProgramArguments");
-  } else if (!exists(node)) {
-    problems.push(`node binary ${node} does not exist (Node upgraded or moved?)`);
+  const [node, ...args] = plistStrings(xml, "ProgramArguments");
+  if (!node || !exists(node)) {
+    problems.push(
+      `node binary ${node ?? "(none)"} does not exist (Node upgraded or moved?)`,
+    );
+  } else {
+    // Only nvm paths carry a version; anything else would need executing node.
+    const major = Number(node.match(/\/node\/v(\d+)\./)?.[1]);
+    if (major < MIN_NODE_MAJOR) {
+      problems.push(
+        `node binary is v${major}; the job's flags need >= ${MIN_NODE_MAJOR}`,
+      );
+    }
+  }
+  // Node runs the first argument that is neither a flag nor a flag's value.
+  const script = args.find(
+    (arg, i) => !arg.startsWith("-") && !NODE_VALUE_FLAGS.has(args[i - 1] ?? ""),
+  );
+  if (script !== "src/run.ts") {
+    problems.push(`ProgramArguments run ${script ?? "no script"}, not src/run.ts`);
   }
 
   return problems.length === 0
-    ? { name, status: "pass", detail: "paths match this checkout" }
+    ? { name, status: "pass", detail: "matches this checkout" }
     : { name, status: "warn", detail: problems.join("; ") };
 }
 
 export function runChecks(input: DoctorInput): CheckResult[] {
   return [
     checkNodeVersion(input.nodeVersion),
-    checkChrome(input.platform, input.env, input.exists),
+    checkChrome(input.platform, input.exists),
     checkTargets(input.targets),
     checkOAuthFiles(
       input.projectRoot,
+      input.env,
       input.oauthClientPath,
       input.oauthTokenPath,
       input.exists,
