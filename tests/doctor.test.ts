@@ -199,10 +199,15 @@ describe("macOS checks", () => {
     assert.match(result.detail, /v18; the job's flags need >= 22/);
   });
 
-  test("plist warns when it runs some other script", () => {
-    const result = mac(plist(ROOT, NODE, "scripts/diagnose.ts"), existing(NODE));
-    assert.equal(result.status, "warn");
-    assert.match(result.detail, /do not run src\/run\.ts/);
+  test("plist warns when it runs some other script, even with src/run.ts as an argument", () => {
+    for (const script of [
+      "scripts/diagnose.ts",
+      "scripts/diagnose.ts</string><string>src/run.ts",
+    ]) {
+      const result = mac(plist(ROOT, NODE, script), existing(NODE));
+      assert.equal(result.status, "warn");
+      assert.match(result.detail, /run scripts\/diagnose\.ts, not src\/run\.ts/);
+    }
   });
 });
 

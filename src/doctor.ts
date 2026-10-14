@@ -277,8 +277,12 @@ export function checkLaunchdPlist(
       );
     }
   }
-  if (!args.includes("src/run.ts")) {
-    problems.push("ProgramArguments do not run src/run.ts");
+  // Node runs the first argument that is neither a flag nor --import's value.
+  const script = args.find(
+    (arg, i) => !arg.startsWith("-") && args[i - 1] !== "--import",
+  );
+  if (script !== "src/run.ts") {
+    problems.push(`ProgramArguments run ${script ?? "no script"}, not src/run.ts`);
   }
 
   return problems.length === 0
